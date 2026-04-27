@@ -200,7 +200,9 @@ export default function App() {
           </div>
           <div className="hosts-grid">
             <div className="host-card">
-              <div className="host-avatar">GL</div>
+              <div className="host-avatar">
+                <img src="/girish.jpg" alt="Girish Limaye" className="host-avatar-img" />
+              </div>
               <div>
                 <h3>Girish Limaye</h3><div className="host-role">AI Strategy</div>
                 <p className="host-bio">A seasoned AI consultant who lives and breathes AI strategy.</p>
@@ -213,7 +215,9 @@ export default function App() {
             </div>
 
             <div className="host-card">
-              <div className="host-avatar">AS</div>
+              <div className="host-avatar">
+                <img src="/aman.jpg" alt="Aman Sidhu" className="host-avatar-img" />
+              </div>
               <div>
                 <h3>Aman Sidhu</h3><div className="host-role">Business &amp; Data</div>
                 <p className="host-bio">A renowned business and data thought leader who understands the big picture.</p>
