@@ -14,7 +14,7 @@ export default function App() {
         <div className="container">
           <div className="nav">
             <a href="#" className="brand">
-              <img className="brand-mark" src="https://storage.googleapis.com/genai-ui-1.appspot.com/users/ronimandal70%40gmail.com/attachments/o7nre9v0q5u.png" alt="GovAI.fm Logo" referrerPolicy="no-referrer" />
+              <img className="brand-mark" src="/logo.png" alt="GovAI.fm Logo" />
               <span className="brand-text">
                 GovAI.fm
               </span>
@@ -293,7 +293,7 @@ export default function App() {
           <div className="footer-grid">
             <div className="footer-brand">
               <a href="#" className="brand">
-                <img className="brand-mark" src="https://storage.googleapis.com/genai-ui-1.appspot.com/users/ronimandal70%40gmail.com/attachments/o7nre9v0q5u.png" alt="GovAI.fm Logo" referrerPolicy="no-referrer" />
+                <img className="brand-mark" src="/logo.png" alt="GovAI.fm Logo" />
                 <span className="brand-text">GovAI.fm</span>
               </a>
               <p>Real conversations about how AI is actually being used to improve public services — straight from the practitioners shipping it.</p>
