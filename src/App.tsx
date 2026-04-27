@@ -201,7 +201,7 @@ export default function App() {
           <div className="hosts-grid">
             <div className="host-card">
               <div className="host-avatar">
-                <img src="/girish.jpg" alt="Girish Limaye" className="host-avatar-img" />
+                <img src="/girish.jpg" alt="GL" className="host-avatar-img" />
               </div>
               <div>
                 <h3>Girish Limaye</h3><div className="host-role">AI Strategy</div>
@@ -216,7 +216,7 @@ export default function App() {
 
             <div className="host-card">
               <div className="host-avatar">
-                <img src="/aman.jpg" alt="Aman Sidhu" className="host-avatar-img" />
+                <img src="/aman.jpg" alt="AS" className="host-avatar-img" />
               </div>
               <div>
                 <h3>Aman Sidhu</h3><div className="host-role">Business &amp; Data</div>
