@@ -362,15 +362,15 @@ section { padding: 96px 0; }
   letter-spacing: 0.02em;
   text-transform: uppercase;
   overflow: hidden;
+  position: relative;
 }
 .host-avatar-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  font-size: 32px;
-  text-align: center;
-  line-height: 96px;
-  color: var(--white);
 }
 .host-card h3 { margin-bottom: 6px; color: var(--white); font-size: 22px; }
 .host-role { font-size: 13px; color: var(--cyan-400); margin-bottom: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }

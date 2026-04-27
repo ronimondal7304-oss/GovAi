@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { Radio } from 'lucide-react';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,7 +15,11 @@ export default function App() {
         <div className="container">
           <div className="nav">
             <a href="#" className="brand">
-              <img className="brand-mark" src="/logo.png" alt="GovAI.fm Logo" />
+              <img 
+                className="brand-mark" 
+                src="https://i.ibb.co/wh0fzktN/logo.png" 
+                alt="GovAI.fm Logo"
+              />
               <span className="brand-text">
                 GovAI.fm
               </span>
@@ -201,7 +206,11 @@ export default function App() {
           <div className="hosts-grid">
             <div className="host-card">
               <div className="host-avatar">
-                <img src="/girish.jpg" alt="GL" className="host-avatar-img" />
+                <img 
+                  src="https://i.ibb.co/WpVdZXdx/girish.jpg" 
+                  alt="Girish Limaye" 
+                  className="host-avatar-img" 
+                />
               </div>
               <div>
                 <h3>Girish Limaye</h3><div className="host-role">AI Strategy</div>
@@ -216,7 +225,11 @@ export default function App() {
 
             <div className="host-card">
               <div className="host-avatar">
-                <img src="/aman.jpg" alt="AS" className="host-avatar-img" />
+                <img 
+                  src="https://i.ibb.co/jkKwQYNh/aman.jpg" 
+                  alt="Aman Sidhu" 
+                  className="host-avatar-img" 
+                />
               </div>
               <div>
                 <h3>Aman Sidhu</h3><div className="host-role">Business &amp; Data</div>
@@ -297,7 +310,11 @@ export default function App() {
           <div className="footer-grid">
             <div className="footer-brand">
               <a href="#" className="brand">
-                <img className="brand-mark" src="/logo.png" alt="GovAI.fm Logo" />
+                <img 
+                  className="brand-mark" 
+                  src="https://i.ibb.co/wh0fzktN/logo.png" 
+                  alt="GovAI.fm Logo" 
+                />
                 <span className="brand-text">GovAI.fm</span>
               </a>
               <p>Real conversations about how AI is actually being used to improve public services — straight from the practitioners shipping it.</p>
