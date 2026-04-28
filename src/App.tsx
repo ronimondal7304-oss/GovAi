@@ -11,6 +11,45 @@ export default function App() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeDot, setActiveDot] = useState(0);
 
+  useEffect(() => {
+    // Handle initial hash routing
+    if (window.location.hash) {
+      setTimeout(() => {
+        const id = window.location.hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+
+    // Intercept all hash link clicks for smooth scrolling
+    const handleAnchorClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+      
+      const href = anchor.getAttribute('href');
+      if (href && href.startsWith('#') && href.length > 1) {
+        e.preventDefault();
+        const id = href.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          history.pushState(null, '', href);
+          element.scrollIntoView({ behavior: 'smooth' });
+          setIsMenuOpen(false); // Close mobile menu if open
+        }
+      } else if (href === '#') {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleAnchorClick);
+    return () => document.removeEventListener('click', handleAnchorClick);
+  }, []);
+
   const handleScroll = () => {
     if (!trackRef.current) return;
     const scrollLeft = trackRef.current.scrollLeft;
@@ -142,7 +181,7 @@ export default function App() {
               </div>
             </div>
 
-            <div id="latest-episode-container" className="featured-episode-card">
+            <div id="latest-episode" className="featured-episode-card">
               <div className="featured-episode-label-wrap">
                 <span className="featured-episode-label"><span className="live-dot"></span>LATEST EPISODE</span>
               </div>
