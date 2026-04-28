@@ -585,7 +585,16 @@ section { padding: 96px 0; }
   fill: currentColor;
 }
 @media(max-width: 768px){
-  .side-nav { display: none; }
+  .side-nav {
+    width: 44px;
+    height: 44px;
+  }
+  .side-nav svg {
+    width: 20px;
+    height: 20px;
+  }
+  .side-nav.left { left: 8px; }
+  .side-nav.right { right: 8px; }
 }
 
 /* Cards */
