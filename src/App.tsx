@@ -206,7 +206,7 @@ export default function App() {
               <p className="featured-episode-guest">With Hon. Rick Glumac</p>
 
               <div className="listen-on-box">
-                <div className="listen-on-label">OR LISTEN ON <span className="listen-on-highlight">YOUR FAVORITE APP</span></div>
+                <div className="listen-on-label">OR LISTEN ON <span className="listen-on-highlight">YOUR FAVOURITE APP</span></div>
                 <div className="app-buttons">
                   <a href="https://youtu.be/Ek8ZkbOapBo?si=s1cP_TJ7QYYIVTPM" target="_blank" rel="noopener noreferrer" className="app-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
@@ -581,10 +581,9 @@ export default function App() {
             </div>
           </div>
           <div className="audience-grid">
-            <div className="audience-item"><h4>Business Leaders</h4><p>For leaders who need a clear view of AI to drive informed strategic decisions and bold compliance.</p></div>
+            <div className="audience-item"><h4>Business Leaders</h4><p>For leaders who need a clear view of AI to drive informed strategic decisions and confident compliance.</p></div>
             <div className="audience-item"><h4>Technical Leaders</h4><p>For engineering and architecture leaders shaping how their organizations build, deploy, and govern AI.</p></div>
-            <div className="audience-item"><h4>Actionable Insights</h4><p>Get key from complex challenges and translate cutting-edge AI into practical, actionable insight.</p></div>
-            <div className="audience-item"><h4>Real-World Topics</h4><p>Discussing the most relevant AI topics for public servants, leaders, and citizens shaping the future.</p></div>
+            <div className="audience-item"><h4>Actionable Insights</h4><p>Get key insights from complex challenges and translate cutting-edge AI into practical, actionable advice.</p></div>
           </div>
         </div>
       </section>
@@ -597,8 +596,8 @@ export default function App() {
           </div>
           <div className="topics-wrap">
             <span className="topic-pill">Ethical AI</span><span className="topic-pill">AI and Automation: Transforming Workflows</span>
-            <span className="topic-pill">Driving stakeholder AI buy-in</span><span className="topic-pill">Steps to gain stakeholder approval</span>
-            <span className="topic-pill">Addressing AI's shortcomings</span><span className="topic-pill">Building AI that serves citizens' needs</span>
+            <span className="topic-pill">Driving Stakeholder AI Buy-In</span><span className="topic-pill">Steps to Gain Stakeholder Approval</span>
+            <span className="topic-pill">Addressing AI's Shortcomings</span><span className="topic-pill">Building AI That Serves Citizens' Needs</span>
           </div>
         </div>
       </section>
