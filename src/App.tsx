@@ -3,14 +3,90 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Radio } from 'lucide-react';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [activeDot, setActiveDot] = useState(0);
+
+  const handleScroll = () => {
+    if (!trackRef.current) return;
+    const scrollLeft = trackRef.current.scrollLeft;
+    const cardEl = trackRef.current.children[0] as HTMLElement;
+    const itemWidth = cardEl ? cardEl.offsetWidth : 340;
+    const gap = window.innerWidth >= 768 ? 20 : 20; // consistent gap
+    const newIndex = Math.round(scrollLeft / (itemWidth + gap));
+    setActiveDot(Math.min(newIndex, 10)); // max 10 for 11 dots (0-10)
+  };
+
+  const scrollToEpisode = (index: number) => {
+    if (!trackRef.current) return;
+    const cardEl = trackRef.current.children[0] as HTMLElement;
+    const itemWidth = cardEl ? cardEl.offsetWidth : 340;
+    trackRef.current.scrollTo({ left: index * (itemWidth + 20), behavior: 'smooth' });
+  };
+
+  // Ensure scroll listener is added to the correct track
+  // We can attach it directly to the div using onScroll
+
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!trackRef.current) return;
+    setIsMouseDown(true);
+    setIsDragging(false);
+    setStartX(e.pageX - trackRef.current.offsetLeft);
+    setScrollLeft(trackRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsMouseDown(false);
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
+    // don't set isDragging to false immediately so click handler can read it
+    setTimeout(() => setIsDragging(false), 0);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !trackRef.current) return;
+    const x = e.pageX - trackRef.current.offsetLeft;
+    if (Math.abs(x - startX) > 5) {
+      setIsDragging(true);
+    }
+    if (!isDragging) return;
+    e.preventDefault();
+    const walk = (x - startX) * 2; // scroll-fast
+    trackRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   return (
     <>
+      {activeVideo && (
+        <div className="video-modal-overlay" onClick={() => setActiveVideo(null)}>
+          <div className="video-modal-content" onClick={e => e.stopPropagation()}>
+            <button className="video-modal-close" onClick={() => setActiveVideo(null)}>×</button>
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${activeVideo}?autoplay=1`}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </div>
+      )}
       <header className="site-header">
         <div className="container">
           <div className="nav">
@@ -28,6 +104,7 @@ export default function App() {
               <a href="#about">About</a>
               <a href="#episodes">Episodes</a>
               <a href="#hosts">Hosts</a>
+              <a href="#guests">Guests</a>
               <a href="#why">Why Tune In</a>
               <a href="#topics">Topics</a>
             </nav>
@@ -40,13 +117,13 @@ export default function App() {
         </div>
       </header>
 
-      <section className="hero">
+      <section id="about" className="hero">
         <div className="container">
           <div className="hero-grid">
             <div>
-              <span className="eyebrow">A podcast for public-sector AI leaders</span>
-              <h1>AI in the Public Sector: <em>Behind the Scenes</em></h1>
-              <p className="hero-sub">Join us as we explore the real stories behind AI in government services. No vendor pitches — just public servants and practitioners sharing what actually worked.</p>
+              <span className="eyebrow">DECLUTTERING AI FOR THE PUBLIC SECTOR &amp; BEYOND</span>
+              <h1>Conversations with AI leaders shaping real-world adoption</h1>
+              <p className="hero-sub">Hear from the leaders, builders, and policymakers shaping how AI gets adopted — what’s actually working, what isn’t, and what comes next.</p>
               <div className="hero-ctas">
                 <a href="#latest-episode" className="btn btn-primary btn-large">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -65,78 +142,117 @@ export default function App() {
               </div>
             </div>
 
-            <a id="latest-episode" href="https://www.youtube.com/watch?v=i41bi-9hPXg" target="_blank" rel="noopener noreferrer" className="featured-episode" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
-              <span className="featured-episode-label"><span className="live-dot"></span>Latest Episode</span>
-              <div className="featured-episode-thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/i41bi-9hPXg/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-                <div className="play-button">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <div id="latest-episode-container" className="featured-episode-card">
+              <div className="featured-episode-label-wrap">
+                <span className="featured-episode-label"><span className="live-dot"></span>LATEST EPISODE</span>
+              </div>
+
+              <div className="featured-episode-media">
+                <div
+                  className="featured-episode-thumb"
+                  style={{ backgroundImage: 'url(https://img.youtube.com/vi/Ek8ZkbOapBo/maxresdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', cursor: 'pointer' }}
+                  onClick={() => setActiveVideo('Ek8ZkbOapBo')}
+                >
+                  <div className="play-button-large">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
                 </div>
               </div>
+
               <div className="featured-episode-meta">
-                <span>EP 10</span>
-                <span className="dot"></span><span>42 min</span>
-                <span className="dot"></span><span>Latest</span>
+                <span>EP 11</span>
+                <span className="dot">·</span><span>Latest</span>
               </div>
-              <h3>Traditional Software Dev Is Dead: A Blueprint for What's Next</h3>
-              <p className="featured-episode-guest">With Andre Kaminski &amp; Girish Limaye</p>
-            </a>
+              <h3 className="featured-episode-title" style={{ fontFamily: '"Fraunces", serif' }}>Inside BC's Unfolding AI Story</h3>
+              <p className="featured-episode-guest">With Hon. Rick Glumac</p>
+
+              <div className="listen-on-box">
+                <div className="listen-on-label">OR LISTEN ON <span className="listen-on-highlight">YOUR FAVORITE APP</span></div>
+                <div className="app-buttons">
+                  <a href="https://youtu.be/Ek8ZkbOapBo?si=s1cP_TJ7QYYIVTPM" target="_blank" rel="noopener noreferrer" className="app-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span>YouTube</span>
+                  </a>
+                  <a href="https://open.spotify.com/episode/4kTurw4jCdIFL5EttTBXq3?si=MY-ih26oSQaJL8KTKomHkg&t=0&pi=mdXTQTkSQvazo" target="_blank" rel="noopener noreferrer" className="app-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.24 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.14 4.32-1.32 9.72-.6 13.439 1.68.421.241.6.84.3 1.14zm.12-3.36C15.24 8.28 8.82 8.04 5.16 9.18c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.2-1.32 11.28-1.02 15.721 1.62.539.3.719 1.02.419 1.56-.239.6-.959.78-1.559.42z"/></svg>
+                    <span>Spotify</span>
+                  </a>
+                  <a href="https://podcasts.apple.com/us/podcast/inside-bcs-unfolding-ai-story-with-rick-glumac-bcs/id1895586834?i=1000763981747" target="_blank" rel="noopener noreferrer" className="app-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm.013 19.387c-3.167 0-5.733-1.307-5.733-4.52V11.24c0-3.32 2.5-5.907 5.76-5.907 3.253 0 5.76 2.587 5.76 5.907v3.627c0 3.213-2.566 4.52-5.787 4.52zm0-11.893c-2.027 0-3.693 1.587-3.693 3.653v2.853c0 2.053 1.666 3.653 3.693 3.653 2.04 0 3.693-1.6 3.693-3.653v-2.853c0-2.066-1.653-3.653-3.693-3.653zm0 5.306c-.853 0-1.533-.666-1.533-1.506 0-.827.68-1.507 1.533-1.507.867 0 1.534.68 1.534 1.507 0 .84-.667 1.506-1.534 1.506z"/></svg>
+                    <span>Apple</span>
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="trust-strip">
-        <div className="container">
-          <div className="trust-strip-content">
-            <span className="trust-strip-label">Featured Guests Include</span>
-            <div className="trust-guests">
-              <span>Andre Kaminski</span>
-              <span>Dr. Vered Shwartz</span>
-              <span>Jawad Amin · Microsoft</span>
-              <span>Hubert Duan</span>
-              <span>Dr. Nan Xie</span>
-              <span>Dr. Curtis Northcutt</span>
-              <span>Aman Sidhu</span>
+      <section id="guests" className="guests-section">
+        <div className="guests-section-label">Featured Guests</div>
+        <h2 className="guests-section-headline">Voices on the show</h2>
+        <div className="guests-grid">
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/mVrpRJ4Y/rick.jpg" alt="Hon. Rick Glumac" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Hon. Rick Glumac</div>
+              <div className="guest-company">Province of BC</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <section id="about" className="section-mid">
-        <div className="container">
-          <div className="about-wrap">
-            <div className="about-text">
-              <span className="eyebrow">About the Podcast</span>
-              <h2>The unfiltered conversations public-sector AI deserves.</h2>
-              <p>Want to know how AI is actually being used to improve public services? Get a no-nonsense guide to real-world AI implementations. We tap into the unique openness of the public sector to share detailed strategies and lessons learned, accelerating AI adoption for the benefit of all.</p>
-              <p>Join us to explore detailed strategies and lessons learned directly from those in the trenches of public sector AI innovation.</p>
-              <div className="stat-grid">
-                <div>
-                  <div className="stat-num">10+</div><div className="stat-label">Episodes published</div>
-                </div>
-                <div>
-                  <div className="stat-num">7+</div><div className="stat-label">Industry experts featured</div>
-                </div>
-              </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/rfdyWpJX/jawad.jpg" alt="Jawad Amin" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div className="about-visual">
-              <svg viewBox="0 0 200 200" fill="none">
-                <rect x="60" y="40" width="80" height="20" rx="2" stroke="#22D3EE" strokeWidth="1.5"/>
-                <rect x="68" y="60" width="64" height="100" stroke="#22D3EE" strokeWidth="1.5"/>
-                <line x1="78" y1="60" x2="78" y2="160" stroke="#22D3EE" strokeWidth="1"/>
-                <line x1="100" y1="60" x2="100" y2="160" stroke="#22D3EE" strokeWidth="1.5"/>
-                <line x1="122" y1="60" x2="122" y2="160" stroke="#22D3EE" strokeWidth="1"/>
-                <rect x="56" y="160" width="88" height="14" rx="2" stroke="#22D3EE" strokeWidth="1.5"/>
-                <circle cx="60" cy="40" r="4" fill="#22D3EE"/>
-                <circle cx="100" cy="40" r="4" fill="#22D3EE"/>
-                <circle cx="140" cy="40" r="4" fill="#22D3EE"/>
-                <circle cx="60" cy="174" r="4" fill="#22D3EE"/>
-                <circle cx="100" cy="174" r="4" fill="#22D3EE"/>
-                <circle cx="140" cy="174" r="4" fill="#22D3EE"/>
-                <line x1="60" y1="40" x2="40" y2="40" stroke="#22D3EE" strokeWidth="1" opacity="0.5"/>
-                <line x1="140" y1="40" x2="160" y2="40" stroke="#22D3EE" strokeWidth="1" opacity="0.5"/>
-                <line x1="60" y1="174" x2="40" y2="174" stroke="#22D3EE" strokeWidth="1" opacity="0.5"/>
-                <line x1="140" y1="174" x2="160" y2="174" stroke="#22D3EE" strokeWidth="1" opacity="0.5"/>
-              </svg>
+            <div className="guest-info">
+              <div className="guest-name">Jawad Amin</div>
+              <div className="guest-company">Microsoft</div>
+            </div>
+          </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/wN9JbzsN/vered.jpg" alt="Dr. Vered Shwartz" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Dr. Vered Shwartz</div>
+              <div className="guest-company">UBC</div>
+            </div>
+          </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/G4TmW5s9/curtis.png" alt="Dr. Curtis Northcutt" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Dr. Curtis Northcutt</div>
+              <div className="guest-company">Cleanlab</div>
+            </div>
+          </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/bjrFL7zk/andre.jpg" alt="Andre Kaminski" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Andre Kaminski</div>
+              <div className="guest-company">WorkSafeBC</div>
+            </div>
+          </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/ZRFtkLKM/hubert.jpg" alt="Hubert Duan" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Hubert Duan</div>
+              <div className="guest-company">Microsoft</div>
+            </div>
+          </div>
+          <div className="guest-card">
+            <div className="guest-avatar">
+              <img src="https://i.ibb.co/wZW3gsLt/nan-xie.jpg" alt="Dr. Nan Xie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div className="guest-info">
+              <div className="guest-name">Dr. Nan Xie</div>
+              <div className="guest-company">City of Calgary</div>
             </div>
           </div>
         </div>
@@ -146,52 +262,207 @@ export default function App() {
         <div className="container">
           <div className="episodes-header">
             <div className="section-header" style={{ marginBottom: 0 }}>
-              <span className="eyebrow">Latest Episodes</span>
               <h2>Real conversations. Real implementations.</h2>
+            </div>
+            <div className="section-sub">
+              <div className="dash"></div>
+              Latest Episodes
+              <span className="count">11 episodes</span>
             </div>
           </div>
 
-          <div className="episode-grid">
-            <a href="https://www.youtube.com/watch?v=i41bi-9hPXg" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-1" style={{ backgroundImage: 'url(https://img.youtube.com/vi/i41bi-9hPXg/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 10</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>10</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>42 min</span></div><h3>Traditional Software Dev Is Dead: A Blueprint for What's Next</h3><div className="episode-guest"><span className="guest-dot"></span>With Andre Kaminski</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=pveBZhOoI84" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-2" style={{ backgroundImage: 'url(https://img.youtube.com/vi/pveBZhOoI84/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 09</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>09</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>38 min</span></div><h3>AI's Blind Spots: Cultural Bias, Hallucinations & What Leaders Must Know</h3><div className="episode-guest"><span className="guest-dot"></span>With Dr. Vered Shwartz</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=qF0KHYdyMWE" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-3" style={{ backgroundImage: 'url(https://img.youtube.com/vi/qF0KHYdyMWE/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 08</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>08</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>45 min</span></div><h3>The Next Era of AI Agents: What Leaders Must Know</h3><div className="episode-guest"><span className="guest-dot"></span>With Jawad Amin · Microsoft</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=YhbVvKoctsU" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-4" style={{ backgroundImage: 'url(https://img.youtube.com/vi/YhbVvKoctsU/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 07</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>07</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>40 min</span></div><h3>RAG Isn't a Silver Bullet — Making GenAI Reliable in the Real World</h3><div className="episode-guest"><span className="guest-dot"></span>With Hubert Duan</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=ZxcUFD1ofeo" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-5" style={{ backgroundImage: 'url(https://img.youtube.com/vi/ZxcUFD1ofeo/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 06</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>06</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>44 min</span></div><h3>Beyond DevOps: Building in the Age of AI</h3><div className="episode-guest"><span className="guest-dot"></span>With Andre Kaminski</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=-uyDu190JXY" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-6" style={{ backgroundImage: 'url(https://img.youtube.com/vi/-uyDu190JXY/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 05</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>05</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>39 min</span></div><h3>The Story of AI Part 2 — The Fifth Tribe Strikes Back</h3><div className="episode-guest"><span className="guest-dot"></span>With Aman Sidhu & Girish Limaye</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=2PorEY2yUrI" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-7" style={{ backgroundImage: 'url(https://img.youtube.com/vi/2PorEY2yUrI/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 04</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>04</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>41 min</span></div><h3>Rethinking Public Sector Innovation</h3><div className="episode-guest"><span className="guest-dot"></span>With Dr. Nan Xie</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=3im5q70hS8o" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-8" style={{ backgroundImage: 'url(https://img.youtube.com/vi/3im5q70hS8o/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 03</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>03</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>43 min</span></div><h3>Designing the Trust Layer for AI: A Conversation</h3><div className="episode-guest"><span className="guest-dot"></span>With Dr. Curtis Northcutt</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=cI106r0XSbA" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-9" style={{ backgroundImage: 'url(https://img.youtube.com/vi/cI106r0XSbA/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 02</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>02</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>48 min</span></div><h3>The Story of AI Part 1 — 60 Years, 5 Tribes</h3><div className="episode-guest"><span className="guest-dot"></span>With Aman Sidhu & Girish Limaye</div></div>
-            </a>
-            <a href="https://www.youtube.com/watch?v=vW17Ev9n5EA" target="_blank" rel="noopener noreferrer" className="episode-card">
-              <div className="episode-thumb thumb-10" style={{ backgroundImage: 'url(https://img.youtube.com/vi/vW17Ev9n5EA/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}><span className="episode-num">EP 01</span><div className="episode-thumb-overlay" style={{ opacity: 0.1 }}>01</div><div className="episode-watch"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>
-              <div className="episode-body"><div className="episode-meta"><span>YouTube</span><span className="dot"></span><span>36 min</span></div><h3>GovAI.fm Kick-Off — Demystifying the AI Journey</h3><div className="episode-guest"><span className="guest-dot"></span>With Girish & Aman</div></div>
-            </a>
+          <div className="carousel-wrap">
+            <button className="side-nav left" onClick={() => trackRef.current?.scrollBy({ left: -380, behavior: 'smooth' })}>
+              <svg viewBox="0 0 24 24"><path d="M15.5 4L8 12l7.5 8 1.5-1.4L11 12l6-6.6z"/></svg>
+            </button>
+            <button className="side-nav right" onClick={() => trackRef.current?.scrollBy({ left: 380, behavior: 'smooth' })}>
+              <svg viewBox="0 0 24 24"><path d="M8.5 4L16 12l-7.5 8L7 18.6 13 12 7 5.4z"/></svg>
+            </button>
+            <div className="edge-fade left"></div>
+            <div className="edge-fade right"></div>
+
+            <div 
+              className="opt1-track" 
+              ref={trackRef} 
+              onScroll={handleScroll}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              style={{ cursor: isMouseDown ? 'grabbing' : 'grab' }}
+            >
+              <div onClick={() => !isDragging && setActiveVideo('Ek8ZkbOapBo')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/Ek8ZkbOapBo/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 11</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">
+                    <span className="latest">EP 11</span><span className="dot">·</span><span className="latest">Latest</span>
+                  </div>
+                  <h3>Inside BC's Unfolding AI Story</h3>
+                  <div className="with">With Hon. Rick Glumac</div>
+                </div>
+              </div>
+              
+              <div onClick={() => !isDragging && setActiveVideo('i41bi-9hPXg')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/i41bi-9hPXg/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 10</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 10</div>
+                  <h3>Traditional Software Dev Is Dead: A Blueprint for What's Next</h3>
+                  <div className="with">With Andre Kaminski</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('pveBZhOoI84')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/pveBZhOoI84/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 09</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 09</div>
+                  <h3>AI's Blind Spots: Cultural Bias, Hallucinations & What Leaders Must Know</h3>
+                  <div className="with">With Dr. Vered Shwartz</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('qF0KHYdyMWE')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/qF0KHYdyMWE/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 08</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 08</div>
+                  <h3>The Next Era of AI Agents: What Leaders Must Know</h3>
+                  <div className="with">With Jawad Amin · Microsoft</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('YhbVvKoctsU')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/YhbVvKoctsU/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 07</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 07</div>
+                  <h3>RAG Isn't a Silver Bullet — Making GenAI Reliable in the Real World</h3>
+                  <div className="with">With Hubert Duan</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('ZxcUFD1ofeo')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/ZxcUFD1ofeo/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 06</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 06</div>
+                  <h3>Beyond DevOps: Building in the Age of AI</h3>
+                  <div className="with">With Andre Kaminski</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('-uyDu190JXY')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/-uyDu190JXY/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 05</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 05</div>
+                  <h3>The Story of AI Part 2 — The Fifth Tribe Strikes Back</h3>
+                  <div className="with">With Aman Sidhu & Girish Limaye</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('2PorEY2yUrI')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/2PorEY2yUrI/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 04</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 04</div>
+                  <h3>Rethinking Public Sector Innovation</h3>
+                  <div className="with">With Dr. Nan Xie</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('3im5q70hS8o')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/3im5q70hS8o/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 03</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 03</div>
+                  <h3>Designing the Trust Layer for AI: A Conversation</h3>
+                  <div className="with">With Dr. Curtis Northcutt</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('cI106r0XSbA')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/cI106r0XSbA/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 02</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 02</div>
+                  <h3>The Story of AI Part 1 — 60 Years, 5 Tribes</h3>
+                  <div className="with">With Aman Sidhu & Girish Limaye</div>
+                </div>
+              </div>
+
+              <div onClick={() => !isDragging && setActiveVideo('vW17Ev9n5EA')} className="opt1-card" style={{ cursor: 'pointer' }}>
+                <div className="thumb" style={{ backgroundImage: 'url(https://img.youtube.com/vi/vW17Ev9n5EA/hqdefault.jpg)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                  <div className="thumb-content">
+                    <div className="ep-tag">EP 01</div>
+                  </div>
+                  <div className="play-mini"></div>
+                </div>
+                <div className="info">
+                  <div className="meta">EP 01</div>
+                  <h3>GovAI.fm Kick-Off — Demystifying the AI Journey</h3>
+                  <div className="with">With Girish & Aman</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="dots-row">
+            {Array.from({ length: 11 }).map((_, idx) => (
+              <div 
+                key={idx} 
+                className={`dot ${activeDot === idx ? 'active' : ''}`}
+                onClick={() => scrollToEpisode(idx)}
+              ></div>
+            ))}
+          </div>
+
+          <div className="drag-hint">
+            <span className="arrow">←</span>
+            Drag or use arrows to explore
+            <span className="arrow">→</span>
           </div>
         </div>
       </section>
@@ -213,7 +484,7 @@ export default function App() {
                 />
               </div>
               <div>
-                <h3>Girish Limaye</h3><div className="host-role">AI Strategy</div>
+                <h3>Girish Limaye</h3>
                 <p className="host-bio">A seasoned AI consultant who lives and breathes AI strategy.</p>
                 <div className="host-links">
                   <a href="https://www.linkedin.com/in/girishlimaye/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-small">
@@ -232,7 +503,7 @@ export default function App() {
                 />
               </div>
               <div>
-                <h3>Aman Sidhu</h3><div className="host-role">Business &amp; Data</div>
+                <h3>Aman Sidhu</h3>
                 <p className="host-bio">A renowned business and data thought leader who understands the big picture.</p>
                 <div className="host-links">
                   <a href="https://www.linkedin.com/in/sidhua/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-small">
@@ -319,15 +590,16 @@ export default function App() {
               </a>
               <p>Real conversations about how AI is actually being used to improve public services — straight from the practitioners shipping it.</p>
             </div>
-            <div className="footer-col"><h4>Podcast</h4><ul><li><a href="#about">About</a></li><li><a href="#episodes">Episodes</a></li><li><a href="#hosts">Hosts</a></li><li><a href="#topics">Topics</a></li></ul></div>
+            <div className="footer-col"><h4>Podcast</h4><ul><li><a href="#about">About</a></li><li><a href="#episodes">Episodes</a></li><li><a href="#hosts">Hosts</a></li><li><a href="#guests">Guests</a></li><li><a href="#topics">Topics</a></li></ul></div>
             <div className="footer-col"><h4>Listen</h4><ul><li><a href="https://youtube.com/@govai.fm-podcast?si=ElsC-eBFOu8bPG3M" target="_blank" rel="noopener noreferrer">YouTube</a></li><li><a href="https://podcasts.apple.com/us/podcast/govai-fm/id1895586834" target="_blank" rel="noopener noreferrer">Apple Podcasts</a></li><li><a href="https://open.spotify.com/show/6hvYMMXOtTk4w0790JUS3z?si=ECwlED5QRqeBh1U_arbNUQ" target="_blank" rel="noopener noreferrer">Spotify</a></li></ul></div>
-            <div className="footer-col"><h4>Connect</h4><ul><li><a href="https://www.linkedin.com/in/girishlimaye?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer">LinkedIn</a></li><li><a href="mailto:hello@govai.fm">Contact</a></li></ul></div>
+            <div className="footer-col"><h4>Connect</h4><ul><li><a href="https://www.linkedin.com/in/girishlimaye?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer">LinkedIn</a></li><li><a href="mailto:girish@govai.fm">Contact</a></li></ul></div>
           </div>
           <div className="footer-bottom">
-            <div>© 2025 AI In The Public Sector. All rights reserved. &nbsp;·&nbsp; Audiovisual Support: Susma K. and Jaskaranbir</div>
+            <div>© 2025 AI In The Public Sector. All rights reserved.</div>
             <div className="footer-socials">
               <a href="https://youtube.com/@govai.fm-podcast?si=ElsC-eBFOu8bPG3M" target="_blank" rel="noopener noreferrer" title="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
               <a href="https://www.linkedin.com/in/girishlimaye?utm_source=share_via&utm_content=profile&utm_medium=member_android" target="_blank" rel="noopener noreferrer" title="LinkedIn"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.063 2.063 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452z"/></svg></a>
+              <a href="mailto:girish@govai.fm" title="Email"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></a>
             </div>
           </div>
         </div>
